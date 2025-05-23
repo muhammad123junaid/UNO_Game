@@ -1,6 +1,7 @@
+// Deck.cpp
 #include "Deck.h"
-#include <algorithm>
-#include <chrono>
+#include <algorithm>  
+#include <chrono>     
 
 namespace UNO {
 
@@ -20,9 +21,11 @@ namespace UNO {
     void Deck::reset() {
         cards.clear();
 
+        // 1 zero of each color
         for (auto c : {Color::Red, Color::Green, Color::Blue, Color::Yellow})
             addCopies(Card(c, Value::Zero), 1);
 
+        // 2 of 1–9, Skip, Reverse, DrawTwo per color
         for (auto c : {Color::Red, Color::Green, Color::Blue, Color::Yellow}) {
             for (auto v : { Value::One, Value::Two, Value::Three, Value::Four,
                             Value::Five, Value::Six, Value::Seven, Value::Eight, Value::Nine,
@@ -31,6 +34,7 @@ namespace UNO {
             }
         }
 
+        // Wild cards: 4 Wild, 4 WildDrawFour
         addCopies(Card(Color::Wild, Value::Wild), 4);
         addCopies(Card(Color::Wild, Value::WildDrawFour), 4);
     }
@@ -60,4 +64,4 @@ namespace UNO {
         return static_cast<int>(cards.size());
     }
 
-} 
+} // namespace UNO
