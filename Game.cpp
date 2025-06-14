@@ -1,6 +1,7 @@
-#include "Game.h"
-#include "ASCII.h"
+#include "Game.hpp"
+#include "ASCII.hpp"
 #include <iostream>
+#include <algorithm>
 #include <limits>
 
 using namespace UNO;
@@ -19,29 +20,28 @@ Game::Game(const std::vector<std::string> &names)
     {
         topCard = deck.draw();
     } while (topCard.getValue() == Value::Skip || topCard.getValue() == Value::Reverse || topCard.getValue() == Value::DrawTwo || topCard.getValue() == Value::Wild || topCard.getValue() == Value::WildDrawFour);
-    std::cout <<"Starting Card: " << topCard << "\n";
 }
 
 void Game::start()
 {
+    ASCIIArt::printStartingCard(topCard);
     while (true)
     {
         Player &p = players[currentPlayer];
         bool isHuman = (currentPlayer == 0);
-
         if (isHuman)
             showStateForHuman();
 
         handleTurn(p, isHuman);
 
-        if (p.getHand().empty()) {
-    if (currentPlayer == 0)
-        ASCIIArt::printWinBanner();
-    else
-        ASCIIArt::printLoseBanner();
-    break;
-}
-
+        if (p.getHand().empty())
+        {
+            if (currentPlayer == 0)
+                ASCIIArt::printWinBanner();
+            else
+                ASCIIArt::printLoseBanner();
+            break;
+        }
 
         nextPlayer();
 
@@ -88,7 +88,7 @@ void Game::handleTurn(Player &player, bool isHuman)
                         continue;
                     }
                     if (choice == -1)
-                        break; 
+                        break;
                     if (choice >= 0 && choice < static_cast<int>(hand.size()) && hand[choice].isPlayableOn(topCard))
                     {
                         i = choice;
@@ -129,6 +129,22 @@ void Game::handleTurn(Player &player, bool isHuman)
     }
 }
 
+Color Game::chooseColorForAI(const Player &aiPlayer) const
+{
+    std::vector<int> colorCounts(4, 0);
+    for (const auto &card : aiPlayer.getHand())
+    {
+        Color c = card.getColor();
+        if (c >= Color::Red && c <= Color::Yellow)
+        {
+            colorCounts[static_cast<int>(c)]++;
+        }
+    }
+
+    int maxIndex = std::distance(colorCounts.begin(), std::max_element(colorCounts.begin(), colorCounts.end()));
+    return static_cast<Color>(maxIndex);
+}
+
 void Game::applyCardEffect(const Card &played)
 {
     switch (played.getValue())
@@ -149,14 +165,14 @@ void Game::applyCardEffect(const Card &played)
         break;
     case Value::Wild:
     {
-        Color c = chooseColor();
+        Color c = (currentPlayer == 0) ? chooseColor() : chooseColorForAI(players[currentPlayer]);
         topCard = Card(c, Value::Wild);
         std::cout << "Wild color chosen: " << Card::colorToString(c) << "\n";
         break;
     }
     case Value::WildDrawFour:
     {
-        Color c = chooseColor();
+        Color c = (currentPlayer == 0) ? chooseColor() : chooseColorForAI(players[currentPlayer]);
         topCard = Card(c, Value::WildDrawFour);
         nextPlayer();
         std::cout << players[currentPlayer].getName() << " draws 4 cards.\n";
